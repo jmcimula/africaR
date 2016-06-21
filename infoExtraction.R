@@ -3,14 +3,18 @@
 #loading some libraries
 
 library(rvest)
+library (dplyr)
+
+source("prcontent.R")
 source("sector.R")
 source("http.R")
 source("subfunc.R")
 
 sector   <- c(
                #climate_change, water, infrastructure ,environmentt, human, energy, agriculture,information	   
-		economic, education, health, gender, transport
-	      )
+			    #economic, education, health, gender, transport
+				gender, health
+			)
             #example
 			
 afriData <- data.frame()
@@ -35,8 +39,8 @@ afriData <- rbind(afriData, cbind(getData(nbSubpage), sector = sector[i] ) )
 
 }#End-for
 
-View(afriData)
 
+View(afriData)
 
 table(afriData$country)
 table(afriData$status)
