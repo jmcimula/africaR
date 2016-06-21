@@ -4,14 +4,32 @@
 library(stringr)
 library(stringi)
 
+#Text processing
+
 #Sub functions
+#List of the sponsors
+adf <- "African Development Bank"
+
+#(0) Getting the title of the project 
+getTitle <- function (x){
+
+    y  <- read_html(x) %>%
+          html_nodes("title") %>%
+          html_text()		  
+        
+		y <- str_replace_all(y, adf, "")
+		y <- substr(y, 1, str_length(y) - 2)
+	
+	#return the title
+	return (str_trim(y))
+}
 
 #(1) Number of pages to explore
 getPageNumber <- function(x){
     
 	#Pattern
 	inX <- c("[:alpha:]","[:punct:]",">","<","=")
-	rcX <- x #Assignment
+	rcX <- x #assignment
 	
 	for (j in 1 : length(inX)){
 	    #replace pattern to null
@@ -53,7 +71,7 @@ getCountry <- function (x){
 	if (str_length(y) >= 30){
 	        
 			#Text processing
-	                e <- unlist(gregexpr(pattern = ":", y)) + 1 
+	        e <- unlist(gregexpr(pattern = ":", y)) + 1 
 			y <- str_trim(substr(y, e, str_length(y)))
 			y <- stri_extract_last_boundaries(y)
 	}
@@ -96,7 +114,13 @@ getSearchReference <- function (urlR){
 					country <-  getCountry (UI[j-1,]) #Getting country
 					link    <-  paste(httProj, getLink(UI[j-2, ]), sep = "" )#Creating the link
 					
-					vloop <- data.frame (country, link, status)
+					projectID <- getLink(UI[j-2, ]) #Project id
+					amount  <- getAmount (link, status) #Estimated cost of the project
+					title   <- getTitle(link) #Getting the title of the project
+                    
+					#title <- str_conv(title, "UTF-8")
+					
+					vloop <- data.frame(country, projectID, title, status, amount)
 					valR  <- rbind(valR, vloop)
 		            #setStatusRedict(link,pStatus)
 
@@ -112,16 +136,16 @@ getData <- function (x){
 
     valR <- data.frame ()
 	
-for (j in 1 : x - 1){
+	for (j in 1 : x - 1){
 		
-		#List of project and creation of link + status
+	   #List of project and creation of link + status
 		    
-	if (j > 0) {
+	     if (j > 0) {
                 urlR  <- paste(httpR, j, sep = "")
 		vloop <- getSearchReference(urlR) #Call the function to collect all the project i.e link and status
             }else{ 
-		    vloop <- getSearchReference(httpR)
-		}#if-condition 
+		vloop <- getSearchReference(httpR)
+	    }#if-condition 
     
         valR <- rbind(valR, vloop)	
     }#End for
