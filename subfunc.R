@@ -17,12 +17,45 @@ getTitle <- function (x){
           html_nodes("title") %>%
           html_text()		  
         
-		y <- str_replace_all(y, adf, "")
-		y <- substr(y, 1, str_length(y) - 2)
+	y <- str_replace_all(y, adf, "")
+	y <- substr(y, 1, str_length(y) - 2)
 	
 	#return the title
 	return (str_trim(y))
 }
+
+#Getting some details on the project like implementing agency, appraisal date, approval date, start date
+getProjectDetail <- function (x){
+
+			y <- read_html (x)
+			z <- y %>%
+			     html_nodes("div li strong") %>%
+			     html_text()
+		    
+			if (length(z) == 7){
+					
+					implementing_agency <- z[6]
+					appraisal_date <- z[4]
+					approval_date  <- z[2]
+					start_date     <- z[3]
+					board_presentation <- ""
+			
+			}else{
+					implementing_agency <- ""
+					appraisal_date <- z[2]
+					approval_date  <- ""
+					start_date     <- ""
+					board_presentation <- z[3]
+							
+			}#End-if
+        
+		w <- cbind(implementing_agency, appraisal_date, approval_date, start_date, board_presentation)
+		w <- as.data.frame(w)
+		
+		#return
+		return(w)
+		
+}#End-function
 
 #(1) Number of pages to explore
 getPageNumber <- function(x){
@@ -72,8 +105,8 @@ getCountry <- function (x){
 	        
 			#Text processing
 	        e <- unlist(gregexpr(pattern = ":", y)) + 1 
-			y <- str_trim(substr(y, e, str_length(y)))
-			y <- stri_extract_last_boundaries(y)
+		y <- str_trim(substr(y, e, str_length(y)))
+		y <- stri_extract_last_boundaries(y)
 	}
     #Special character for Ivory Coast and Sao Tome
 	if (str_detect (tolower(y), "ivoire") == TRUE) { y <- "Cote d'Ivoire"}
@@ -97,8 +130,8 @@ getSearchReference <- function (urlR){
 		urlR <- read_html(urlR)
 			
 		urlR <- urlR %>%
-                html_nodes("tr td")%>%
-			    html_text()
+                         html_nodes("tr td")%>%
+			 html_text()
         
 		UI <- urlR
 		UI <- as.data.frame(UI)
@@ -117,10 +150,10 @@ getSearchReference <- function (urlR){
 					projectID <- getLink(UI[j-2, ]) #Project id
 					amount  <- getAmount (link, status) #Estimated cost of the project
 					title   <- getTitle(link) #Getting the title of the project
-                    
+                                        details <- getProjectDetail(link) #Getting some details of the project like date
 					#title <- str_conv(title, "UTF-8")
 					
-					vloop <- data.frame(country, projectID, title, status, amount)
+					vloop <- data.frame(country, projectID, title, status, amount, details)
 					valR  <- rbind(valR, vloop)
 		            #setStatusRedict(link,pStatus)
 
@@ -136,19 +169,19 @@ getData <- function (x){
 
     valR <- data.frame ()
 	
-	for (j in 1 : x - 1){
+for (j in 1 : x - 1){
 		
-	   #List of project and creation of link + status
+		#List of project and creation of link + status
 		    
-	     if (j > 0) {
+	    if (j > 0) {
                 urlR  <- paste(httpR, j, sep = "")
 		vloop <- getSearchReference(urlR) #Call the function to collect all the project i.e link and status
             }else{ 
 		vloop <- getSearchReference(httpR)
-	    }#if-condition 
+            }#if-condition 
     
         valR <- rbind(valR, vloop)	
-    }#End for
+}#End for
     #return
     return (valR)
 
